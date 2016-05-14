@@ -1,5 +1,7 @@
 package com.example.ahmeda.uberdriverapp;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -20,6 +23,10 @@ import com.google.android.gms.maps.model.Marker;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMarkerDragListener, LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
 
+    private SharedPreferences sharedPref;
+    private SharedPreferences.Editor editor;
+    private Button profile;
+    private Button logout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,6 +36,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        sharedPref = getSharedPreferences("uber", 0);
+        editor = sharedPref.edit();
+        profile = (Button) findViewById(R.id.profile);
+        logout = (Button) findViewById(R.id.logout);
+
+        if(! sharedPref.getBoolean("loggedIn", false)) {
+
+            Intent i = new Intent(MainActivity.this, Login.class);
+            startActivity(i);
+            finish();
+        }
+        else{
+            profile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent i = new Intent(MainActivity.this, Profile.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+            logout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    editor.clear().commit();
+                    // editor.commit();
+                    Intent i = new Intent(MainActivity.this, Login.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+        }
 
     }
 
@@ -51,6 +90,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return true;
         }
 
+        else if(id == R.id.item1){
+
+            Intent i = new Intent(MainActivity.this, Profile.class);
+            startActivity(i);
+            finish();
+        }
+        else if(id == R.id.item2){
+            editor.clear().commit();
+            // editor.commit();
+            Intent i = new Intent(MainActivity.this, Login.class);
+            startActivity(i);
+            finish();
+        }
         return super.onOptionsItemSelected(item);
     }
 
