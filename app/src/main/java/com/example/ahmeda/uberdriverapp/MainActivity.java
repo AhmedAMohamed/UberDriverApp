@@ -2,12 +2,11 @@ package com.example.ahmeda.uberdriverapp;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.support.annotation.Nullable;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.AsyncTask;
@@ -63,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng currentLocation;
     private LatLng requestLocation;
 
-    BroadcastReceiver driverLocationUpdatesReceiver;
 
     Button signUp;
     Button login;
@@ -74,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Marker currentLocationMarker;
 
 
+    private SharedPreferences sharedPref;
+    private SharedPreferences.Editor editor;
+    private Button profile;
+    private Button logout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,7 +86,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        sharedPref = getSharedPreferences("uber", 0);
+        editor = sharedPref.edit();
+        profile = (Button) findViewById(R.id.profile);
+        logout = (Button) findViewById(R.id.logout);
 
+        if(! sharedPref.getBoolean("loggedIn", false)) {
+
+            Intent i = new Intent(MainActivity.this, Login.class);
+            startActivity(i);
+            finish();
+        }
+        else{
+            profile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent i = new Intent(MainActivity.this, Profile.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+            logout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    editor.clear().commit();
+                    // editor.commit();
+                    Intent i = new Intent(MainActivity.this, Login.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+        }
         boolean Services_available = checkGooglePlayServices(this);
         if (Services_available) {
             buildGoogleApiClient();
@@ -205,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    public boolean checkGooglePlayServices(Context mContext){
+    public boolean checkGooglePlayServices(MainActivity mContext){
         GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
         int result = googleAPI.isGooglePlayServicesAvailable(this);
         AlertDialog unavailable_play_services=new AlertDialog.Builder(this).create();
@@ -287,6 +319,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(driverLocationUpdatesReceiver);
     }
 }

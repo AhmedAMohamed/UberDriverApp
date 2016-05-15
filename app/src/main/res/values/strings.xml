@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">UberDriverApp</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_login">Login</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_sign_up">SignUp</string>
+    <string name="title_activity_profile">Profile</string>
+    <string-array name="statuses">
+        <item>Available</item>
+        <item>Busy</item>
+    </string-array>
 </resources>
