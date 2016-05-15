@@ -4,10 +4,12 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.support.annotation.Nullable;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.AsyncTask;
@@ -63,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LatLng currentLocation;
     private LatLng requestLocation;
 
-    BroadcastReceiver driverLocationUpdatesReceiver;
 
     Button signUp;
     Button login;
@@ -72,6 +73,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private double longitude;
     private MarkerOptions markerOption;
     private Marker currentLocationMarker;
+
+
+    private SharedPreferences sharedPref;
+    private SharedPreferences.Editor editor;
+    private Button profile;
+    private Button logout;
+    private BroadcastReceiver rideRequestReceiver;
+    private Marker clientfromMarker;
+    private Marker cientToMarker;
 
 
     @Override
@@ -84,7 +94,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        rideRequestReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                double from_lat = intent.getExtras().getDouble("from_lat");
+                double from_lng = intent.getExtras().getDouble("from_lng");
+                double to_lat = intent.getExtras().getDouble("to_lat");
+                double to_lng = intent.getExtras().getDouble("to_lng");
 
+                LatLng from = new LatLng(from_lat, from_lng);
+                LatLng to = new LatLng(to_lat, to_lng);
+
+                clientfromMarker = mMap.addMarker(new MarkerOptions().position(from).title("From location"));
+                cientToMarker = mMap.addMarker(new MarkerOptions().position(to).title("To location"));
+            }
+        };
+
+        registerReceiver(rideRequestReceiver, new IntentFilter("Ride_data"));
+
+        sharedPref = getSharedPreferences("uber", 0);
+        editor = sharedPref.edit();
+        profile = (Button) findViewById(R.id.profile);
+        logout = (Button) findViewById(R.id.logout);
+
+        if(! sharedPref.getBoolean("loggedIn", false)) {
+
+            Intent i = new Intent(MainActivity.this, Login.class);
+            startActivity(i);
+            finish();
+        }
+        else{
+            profile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent i = new Intent(MainActivity.this, Profile.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+            logout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    editor.clear().commit();
+                    Intent i = new Intent(MainActivity.this, Login.class);
+                    startActivity(i);
+                    finish();
+                }
+            });
+        }
         boolean Services_available = checkGooglePlayServices(this);
         if (Services_available) {
             buildGoogleApiClient();
@@ -112,16 +169,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = map;
 
         currentLocationMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(0,0)));
-
-        /*
-        mMap.addMarker(new MarkerOptions()
-                .position(requestLocation)
-                .draggable(true)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-
-        // mMap.addMarker(new MarkerOptions().position(mLastLocation).title("My Actual Location"));
-        //mMap.setMyLocationEnabled(true);
-*/
     }
 
 
@@ -205,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    public boolean checkGooglePlayServices(Context mContext){
+    public boolean checkGooglePlayServices(MainActivity mContext){
         GoogleApiAvailability googleAPI = GoogleApiAvailability.getInstance();
         int result = googleAPI.isGooglePlayServicesAvailable(this);
         AlertDialog unavailable_play_services=new AlertDialog.Builder(this).create();
@@ -244,8 +291,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     class PutLocation extends AsyncTask<Void,Void,Void> {
-        private static final String ID = "id";
-        String Url="http://uberlikeapp-ad3rhy2.rhcloud.com//api/user/updateUserLocation";
+        private String ID;
+        String Url="http://uberlikeapp-ad3rhy2.rhcloud.com/api/user/updateUserLocation";
         StringBuilder stringBuilder;
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -256,12 +303,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected Void doInBackground(Void... params) {
             try{
+                ID = getSharedPreferences("uber", 0).getString("id", null);
                 URL url = new URL(Url);
                 HttpURLConnection urlConnection =(HttpURLConnection)url.openConnection();
                 urlConnection.setRequestMethod("PUT");
                 String type = "driver";
                 urlConnection.setRequestProperty("type", type);
-                urlConnection.setRequestProperty("driver_id", getSharedPreferences("Uber", 0).getString("driver_id", null));
+                urlConnection.setRequestProperty("driver_id", ID);
                 urlConnection.setRequestProperty("lat", String.valueOf(lat));
                 urlConnection.setRequestProperty("lng", String.valueOf(longitude));
                 urlConnection.setDoInput(true);
@@ -287,6 +335,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(driverLocationUpdatesReceiver);
     }
 }
