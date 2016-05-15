@@ -30,8 +30,6 @@ public class Profile extends AppCompatActivity implements AdapterView.OnItemSele
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-
-
         if(parent.getItemAtPosition(position).toString().equals("Available")){
             status = "available";
             Toast.makeText(this.getApplicationContext(), "Available mode Activated", Toast.LENGTH_LONG).show();
@@ -57,7 +55,7 @@ public class Profile extends AppCompatActivity implements AdapterView.OnItemSele
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_profile);
 
         req = (Button) findViewById(R.id.button1);
         sharedPref = getSharedPreferences("uber", 0);

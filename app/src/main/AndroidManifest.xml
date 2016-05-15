@@ -55,6 +55,18 @@
             android:name=".Profile"
             android:label="@string/title_activity_profile" >
         </activity>
+
+        <receiver
+            android:name=".MeRes"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
+
+        <service
+            android:name=".GCMListenerService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>

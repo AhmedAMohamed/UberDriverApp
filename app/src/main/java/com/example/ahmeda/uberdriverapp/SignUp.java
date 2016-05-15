@@ -1,5 +1,6 @@
 package com.example.ahmeda.uberdriverapp;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -13,10 +14,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.google.android.gms.iid.InstanceID;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -34,7 +39,10 @@ public class SignUp extends AppCompatActivity {
     private EditText model;
     private EditText number;
     private EditText color;
+    GoogleCloudMessaging gcm;
 
+
+    String regid;
     private String name_;
     private String mail_;
     private String pass_;
@@ -44,6 +52,8 @@ public class SignUp extends AppCompatActivity {
     private String color_;
     String lat ="31";
     String lng = "31";
+    private RegisterGCM gcmReg;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,9 +89,8 @@ public class SignUp extends AppCompatActivity {
                         !color_.equals("")) {
 
                     ///// inner class instance
-                    registerUser register = new registerUser();
-                    register.execute();
-
+                    gcmReg = new RegisterGCM(gcm, getApplicationContext(), editor);
+                    gcmReg.execute();
                 } else {
                     Toast.makeText(getApplicationContext(), "Please enter your data",
                             Toast.LENGTH_LONG).show();
@@ -90,6 +99,44 @@ public class SignUp extends AppCompatActivity {
             }
         });
 
+    }
+
+    class RegisterGCM extends AsyncTask<String, String, String> {
+
+        GoogleCloudMessaging gcm;
+        Context context;
+        SharedPreferences.Editor editor;
+        private String SENDER_ID = "936214639595";
+
+        RegisterGCM(GoogleCloudMessaging g, Context c, SharedPreferences.Editor e) {
+            gcm = g;
+            context = c;
+            editor = e;
+        }
+        @Override
+        protected String doInBackground(String... params) {
+            if (gcm == null) {
+                gcm = GoogleCloudMessaging.getInstance(context);
+
+                InstanceID gcmID = InstanceID.getInstance(context);
+                try {
+                    regid = gcmID.getToken(SENDER_ID, GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
+                }
+                editor.putString("REG_ID", regid);
+                editor.commit();
+            }
+            return  regid;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            registerUser registration = new registerUser();
+            registration.execute();
+        }
     }
 
     @Override
@@ -135,6 +182,7 @@ public class SignUp extends AppCompatActivity {
                     urlConnection.setRequestProperty("color", color_);
                     urlConnection.setRequestProperty("carNumber", number_);
                     urlConnection.setRequestProperty("model", model_);
+                    urlConnection.setRequestProperty("reg_id", regid);
 
                     urlConnection.setDoInput(true);
                     urlConnection.setDoOutput(true);
@@ -166,7 +214,7 @@ public class SignUp extends AppCompatActivity {
             JSONObject jObject = new JSONObject(jsonId);
             valid = jObject.getBoolean("valid");
             if(valid){
-                id = jObject.getString("user_id");
+                id = jObject.getString("driver_id");
             }
         }
 
@@ -179,14 +227,9 @@ public class SignUp extends AppCompatActivity {
                 editor.putString("id", id);
                 editor.commit();
 
-                Toast.makeText(getBaseContext(), stringBuilder, Toast.LENGTH_LONG).show();
                 Intent i = new Intent(SignUp.this, Profile.class);
                 //i.putExtra("name", name_);
                 startActivity(i);
-                finish();
-            }
-            else{
-                Toast.makeText(getBaseContext(), stringBuilder, Toast.LENGTH_LONG).show();
             }
         }
     }
