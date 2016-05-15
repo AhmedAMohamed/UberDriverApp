@@ -92,10 +92,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         currentLocation = new LatLng(0,0);
         requestLocation = new LatLng(10,10);
-
-        //signUp = (Button)findViewById(R.id.signupButton);
-        //login = (Button)findViewById(R.id.login);
-        //requestRide = (Button)findViewById(R.id.requestRideBtn);
     }
 
     @Override
@@ -117,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         currentLocationMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(0,0)));
 
+        /*
         mMap.addMarker(new MarkerOptions()
                 .position(requestLocation)
                 .draggable(true)
@@ -124,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // mMap.addMarker(new MarkerOptions().position(mLastLocation).title("My Actual Location"));
         //mMap.setMyLocationEnabled(true);
-
+*/
     }
 
 
